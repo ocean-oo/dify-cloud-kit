@@ -1,6 +1,9 @@
 package oss
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // OSS supports different types of object storage services
 // such as local file system, AWS S3, and Tencent COS.
@@ -41,8 +44,6 @@ type OSS interface {
 	// Type returns the type of the storage
 	// For example: local, aws_s3, tencent_cos
 	Type() string
-
-	//Validate() error
 }
 
 type OSSArgs struct {
@@ -65,13 +66,36 @@ type S3 struct {
 	Region       string
 }
 
+func (s *S3) Validate() error {
+	if s.Bucket == "" || s.Region == "" {
+		msg := fmt.Sprintf("bucket and region cannot be empty.")
+		return ErrArgumentInvalid.WithDetail(msg)
+	}
+	return nil
+}
+
 type AzureBlob struct {
 	ConnectionString string
 	ContainerName    string
 }
 
+func (a *AzureBlob) Validate() error {
+	if a.ConnectionString == "" || a.ContainerName == "" {
+		msg := fmt.Sprintf("connectorString and containerName cannot be empty.")
+		return ErrArgumentInvalid.WithDetail(msg)
+	}
+	return nil
+}
+
 type Local struct {
 	Path string
+}
+
+func (l *Local) Validate() error {
+	if l.Path == "" {
+		return ErrArgumentInvalid.WithDetail("path cannot be empty")
+	}
+	return nil
 }
 
 type AliyunOSS struct {
@@ -84,6 +108,14 @@ type AliyunOSS struct {
 	Bucket      string
 }
 
+func (a *AliyunOSS) Validate() error {
+	if a.Bucket == "" || a.SecretKey == "" || a.AccessKey == "" || a.Endpoint == "" {
+		msg := fmt.Sprintf("bucket, accesskKey, secretKey, endpoint cannot be empty.")
+		return ErrArgumentInvalid.WithDetail(msg)
+	}
+	return nil
+}
+
 type TencentCOS struct {
 	Region    string
 	SecretID  string
@@ -91,9 +123,25 @@ type TencentCOS struct {
 	Bucket    string
 }
 
+func (t *TencentCOS) Validate() error {
+	if t.Bucket == "" || t.Region == "" || t.SecretID == "" || t.SecretKey == "" {
+		msg := fmt.Sprintf("bucket, region, secretKey, secretID cannot be empty.")
+		return ErrArgumentInvalid.WithDetail(msg)
+	}
+	return nil
+}
+
 type GoogleCloudStorage struct {
 	Bucket         string
 	CredentialsB64 string
+}
+
+func (g *GoogleCloudStorage) Validate() error {
+	if g.Bucket == "" || g.CredentialsB64 == "" {
+		msg := fmt.Sprintf("bucket and credentials cannot be empty.")
+		return ErrArgumentInvalid.WithDetail(msg)
+	}
+	return nil
 }
 
 type HuaweiOBS struct {
@@ -101,4 +149,12 @@ type HuaweiOBS struct {
 	AccessKey string
 	SecretKey string
 	Server    string
+}
+
+func (h *HuaweiOBS) Validate() error {
+	if h.Bucket == "" || h.AccessKey == "" || h.SecretKey == "" || h.Server == "" {
+		msg := fmt.Sprintf("bucket, accesskKey, secretKey, server cannot be empty.")
+		return ErrArgumentInvalid.WithDetail(msg)
+	}
+	return nil
 }

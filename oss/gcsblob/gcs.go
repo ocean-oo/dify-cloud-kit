@@ -19,16 +19,23 @@ type GoogleCloudStorage struct {
 }
 
 func NewGoogleCloudStorage(args oss.OSSArgs) (oss.OSS, error) {
+	if args.GoogleCloudStorage == nil {
+		return nil, oss.ErrArgumentInvalid.WithDetail("can't find Google Cloud Storage argument in OSSArgs")
+	}
+	err := args.GoogleCloudStorage.Validate()
+	if err != nil {
+		return nil, err
+	}
 	ctx := context.Background()
 	bucket := args.GoogleCloudStorage.Bucket
 	credentialsB64 := args.GoogleCloudStorage.CredentialsB64
 	credentials, err := base64.StdEncoding.DecodeString(credentialsB64)
 	if err != nil {
-		return nil, err
+		return nil, oss.ErrProviderInit.WithError(err).WithDetail("credentials must be a base64 encoded string")
 	}
 	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credentials))
 	if err != nil {
-		return nil, err
+		return nil, oss.ErrProviderInit.WithError(err)
 	}
 	return &GoogleCloudStorage{
 		bucket: bucket,

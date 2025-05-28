@@ -20,13 +20,22 @@ type TencentCOSStorage struct {
 }
 
 func NewTencentCOSStorage(args oss.OSSArgs) (oss.OSS, error) {
+	if args.TencentCOS == nil {
+		return nil, oss.ErrArgumentInvalid.WithDetail("can't find Tencent COS argument in OSSArgs")
+	}
+
+	err := args.TencentCOS.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	bucket := args.TencentCOS.Bucket
 	region := args.TencentCOS.Region
 	secretID := args.TencentCOS.SecretID
 	secretKey := args.TencentCOS.SecretKey
 	u, err := url.Parse("https://" + bucket + ".cos." + region + ".myqcloud.com")
 	if err != nil {
-		return nil, err
+		return nil, oss.ErrProviderInit.WithError(err).WithDetail("url parse failed")
 	}
 
 	b := &cos.BaseURL{BucketURL: u}
@@ -39,7 +48,7 @@ func NewTencentCOSStorage(args oss.OSSArgs) (oss.OSS, error) {
 
 	_, err = client.Bucket.Head(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, oss.ErrProviderInit.WithError(err)
 	}
 
 	return &TencentCOSStorage{

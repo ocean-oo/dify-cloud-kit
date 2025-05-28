@@ -22,6 +22,14 @@ type S3Storage struct {
 }
 
 func NewS3Storage(args oss.OSSArgs) (oss.OSS, error) {
+	var err error
+	if args.S3 == nil {
+		return nil, oss.ErrArgumentInvalid.WithDetail("can't find s3 argument in OSSArgs")
+	}
+	err = args.S3.Validate()
+	if err != nil {
+		return nil, err
+	}
 	useAws := args.S3.UseAws
 	ak := args.S3.AccessKey
 	sk := args.S3.SecretKey
@@ -31,7 +39,6 @@ func NewS3Storage(args oss.OSSArgs) (oss.OSS, error) {
 	bucket := args.S3.Bucket
 
 	var cfg aws.Config
-	var err error
 	var client *s3.Client
 
 	if useAws {
@@ -52,7 +59,7 @@ func NewS3Storage(args oss.OSSArgs) (oss.OSS, error) {
 			)
 		}
 		if err != nil {
-			return nil, err
+			return nil, oss.ErrProviderInit.WithError(err)
 		}
 
 		client = s3.NewFromConfig(cfg, func(options *s3.Options) {
@@ -91,7 +98,7 @@ func NewS3Storage(args oss.OSSArgs) (oss.OSS, error) {
 				Bucket: aws.String(bucket),
 			})
 			if err != nil {
-				return nil, err
+				return nil, oss.ErrProviderInit.WithError(err)
 			}
 		}
 	}

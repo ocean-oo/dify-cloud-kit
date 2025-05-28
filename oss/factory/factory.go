@@ -1,6 +1,8 @@
 package factory
 
 import (
+	"fmt"
+
 	"github.com/langgenius/dify-cloud-kit/oss"
 	"github.com/langgenius/dify-cloud-kit/oss/aliyun"
 	"github.com/langgenius/dify-cloud-kit/oss/azureblob"
@@ -40,7 +42,8 @@ var OSSFactory = map[string]func(oss.OSSArgs) (oss.OSS, error){
 func Load(name string, args oss.OSSArgs) (oss.OSS, error) {
 	f, ok := OSSFactory[name]
 	if !ok {
-		return nil, oss.ErrStorageNotFound
+		msg := fmt.Sprintf("[ %s ] is not in the provider list", name)
+		return nil, oss.ErrProviderNotFound.WithDetail(msg)
 	}
 	return f(args)
 }

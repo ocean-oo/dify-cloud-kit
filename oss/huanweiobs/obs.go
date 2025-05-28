@@ -18,13 +18,21 @@ type HuaweiOBSStorage struct {
 }
 
 func NewHuaweiOBSStorage(args oss.OSSArgs) (oss.OSS, error) {
+	if args.HuaweiOBS == nil {
+		return nil, oss.ErrArgumentInvalid.WithDetail("can't find Huawei OBS argument in OSSArgs")
+	}
+
+	err := args.HuaweiOBS.Validate()
+	if err != nil {
+		return nil, err
+	}
 	ak := args.HuaweiOBS.AccessKey
 	sk := args.HuaweiOBS.SecretKey
 	endpoint := args.HuaweiOBS.Server
 	bucket := args.HuaweiOBS.Bucket
 	client, err := obs.New(ak, sk, endpoint)
 	if err != nil {
-		return nil, err
+		return nil, oss.ErrProviderInit.WithError(err)
 	}
 
 	return &HuaweiOBSStorage{

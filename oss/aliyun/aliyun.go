@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	dify_oss "github.com/langgenius/dify-cloud-kit/oss"
+	difyoss "github.com/langgenius/dify-cloud-kit/oss"
 )
 
 type AliyunOSSStorage struct {
@@ -18,7 +18,17 @@ type AliyunOSSStorage struct {
 	path   string
 }
 
-func NewAliyunOSSStorage(args dify_oss.OSSArgs) (dify_oss.OSS, error) {
+func NewAliyunOSSStorage(args difyoss.OSSArgs) (difyoss.OSS, error) {
+	var err error
+	if args.AliyunOSS == nil {
+		return nil, difyoss.ErrArgumentInvalid.WithDetail("can't find Aiyun OSS argument in OSSArgs")
+	}
+
+	err = args.AliyunOSS.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	region := args.AliyunOSS.Region
 	endpoint := args.AliyunOSS.Endpoint
 	accessKeyID := args.AliyunOSS.AccessKey
@@ -47,18 +57,17 @@ func NewAliyunOSSStorage(args dify_oss.OSSArgs) (dify_oss.OSS, error) {
 
 	// create client
 	var client *oss.Client
-	var err error
 
 	client, err = oss.New(endpoint, accessKeyID, accessKeySecret, options...)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create AliyunOSS client: %w", err)
+		return nil, difyoss.ErrProviderInit.WithError(err).WithDetail("failed to create Aliyun OSS client")
 	}
 
 	// get specified bucket
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get bucket %s: %w", bucketName, err)
+		return nil, difyoss.ErrProviderInit.WithError(err).WithDetail(fmt.Sprintf("failed to get bucket %s", bucketName))
 	}
 
 	// normalize path: remove leading slash, ensure trailing slash
@@ -105,11 +114,11 @@ func (s *AliyunOSSStorage) Exists(key string) (bool, error) {
 	return s.bucket.IsObjectExist(fullPath)
 }
 
-func (s *AliyunOSSStorage) State(key string) (dify_oss.OSSState, error) {
+func (s *AliyunOSSStorage) State(key string) (difyoss.OSSState, error) {
 	fullPath := s.fullPath(key)
 	meta, err := s.bucket.GetObjectMeta(fullPath)
 	if err != nil {
-		return dify_oss.OSSState{}, err
+		return difyoss.OSSState{}, err
 	}
 
 	// Get content length
@@ -134,13 +143,13 @@ func (s *AliyunOSSStorage) State(key string) (dify_oss.OSSState, error) {
 		}
 	}
 
-	return dify_oss.OSSState{
+	return difyoss.OSSState{
 		Size:         size,
 		LastModified: lastModified,
 	}, nil
 }
 
-func (s *AliyunOSSStorage) List(prefix string) ([]dify_oss.OSSPath, error) {
+func (s *AliyunOSSStorage) List(prefix string) ([]difyoss.OSSPath, error) {
 	// combine given prefix with path
 	fullPrefix := s.fullPath(prefix)
 
@@ -149,7 +158,7 @@ func (s *AliyunOSSStorage) List(prefix string) ([]dify_oss.OSSPath, error) {
 		fullPrefix = fullPrefix + "/"
 	}
 
-	var keys []dify_oss.OSSPath
+	var keys []difyoss.OSSPath
 	marker := ""
 	for {
 		lsRes, err := s.bucket.ListObjects(oss.Marker(marker), oss.Prefix(fullPrefix))
@@ -167,7 +176,7 @@ func (s *AliyunOSSStorage) List(prefix string) ([]dify_oss.OSSPath, error) {
 			if key == "" || strings.HasSuffix(key, "/") {
 				continue
 			}
-			keys = append(keys, dify_oss.OSSPath{
+			keys = append(keys, difyoss.OSSPath{
 				Path:  key,
 				IsDir: false,
 			})
@@ -190,5 +199,5 @@ func (s *AliyunOSSStorage) Delete(key string) error {
 }
 
 func (s *AliyunOSSStorage) Type() string {
-	return dify_oss.OSS_TYPE_ALIYUN_OSS
+	return difyoss.OSS_TYPE_ALIYUN_OSS
 }

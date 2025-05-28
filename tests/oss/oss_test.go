@@ -27,7 +27,7 @@ var allCases = []testArgsCases{
 				Path: "/tmp/dify-oss-tests",
 			},
 		},
-		skip: true,
+		skip: false,
 	},
 	{
 		vendor: "s3",

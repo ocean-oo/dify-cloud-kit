@@ -2,7 +2,6 @@ package local
 
 import (
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,9 +14,16 @@ type LocalStorage struct {
 }
 
 func NewLocalStorage(args oss.OSSArgs) (oss.OSS, error) {
+	if args.Local == nil {
+		return nil, oss.ErrArgumentInvalid.WithDetail("can't find Local argument in OSSArgs")
+	}
+	err := args.Local.Validate()
+	if err != nil {
+		return nil, err
+	}
 	root := args.Local.Path
 	if err := os.MkdirAll(root, 0755); err != nil {
-		log.Panicf("Failed to create storage path: %s", err)
+		return nil, oss.ErrProviderInit.WithError(err).WithDetail("failed to create storage path")
 	}
 
 	return &LocalStorage{root: root}, nil

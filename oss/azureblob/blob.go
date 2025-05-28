@@ -15,11 +15,18 @@ type AzureBlobStorage struct {
 }
 
 func NewAzureBlobStorage(args oss.OSSArgs) (oss.OSS, error) {
+	if args.AzureBlob == nil {
+		return nil, oss.ErrArgumentInvalid.WithDetail("can't find Azure Blob argument in OSSArgs")
+	}
+	err := args.AzureBlob.Validate()
+	if err != nil {
+		return nil, err
+	}
 	connectionString := args.AzureBlob.ConnectionString
 	containerName := args.AzureBlob.ContainerName
 	client, err := azblob.NewClientFromConnectionString(connectionString, nil)
 	if err != nil {
-		return nil, err
+		return nil, oss.ErrProviderInit.WithError(err)
 	}
 
 	return &AzureBlobStorage{
