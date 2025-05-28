@@ -96,3 +96,15 @@ go test ./...
 ## 📄 License
 
 This project is licensed under the [Apache 2.0 License](LICENSE).
+
+## NOTICE
+Some parts of the code in this project originate from [dify-plugin-daemon](https://github.com/langgenius/dify-plugin-daemon), specifically:
+
+|Provider | Author | PR |
+|---|---|---|
+|Aliyun OSS|[bravomark](https://github.com/bravomark)|https://github.com/langgenius/dify-plugin-daemon/pull/261 |
+|Azure Blob|[techan](https://github.com/te-chan)|https://github.com/langgenius/dify-plugin-daemon/pull/172|
+|Google GCS|[Hironori Yamamoto](https://github.com/hiro-o918)|https://github.com/langgenius/dify-plugin-daemon/pull/237|
+|Local|[lengyhua](https://github.com/lengyhua)|https://github.com/langgenius/dify-plugin-daemon/pull/157|
+|AWS S3|[Yeuoly](https://github.com/Yeuoly)|https://github.com/langgenius/dify-plugin-daemon/commit/9ad9d7d4de1d123956ab07955e541bc4053e5170|
+|Tencent COS|[quicksand](https://github.com/quicksandznzn)|https://github.com/langgenius/dify-plugin-daemon/pull/97|
